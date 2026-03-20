@@ -28,8 +28,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew build -Pcommit=${{ github.sha }} -Pbuild_number=${{ github.run_number }}
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
