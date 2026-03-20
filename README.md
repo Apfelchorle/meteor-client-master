@@ -1,5 +1,5 @@
 
-<p align="center">THIS PROJECT USES</p>
+<p align="center">THIS PROJECT USES SOURCE CODE DEVELOPED BY <a href="https://github.com/MeteorDevelopment/meteor-client">THE METEOR DEV TEAM</a></p>
 
 
 <p align="center">
