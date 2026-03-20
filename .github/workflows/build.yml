@@ -40,12 +40,6 @@ jobs:
           name: meteor-client
           path: build/libs/*.jar
           if-no-files-found: error
-      - name: Upload JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: meteor-client
-          path: build/libs/*.jar
-          if-no-files-found: error
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
