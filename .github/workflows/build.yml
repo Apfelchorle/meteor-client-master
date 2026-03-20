@@ -40,3 +40,23 @@ jobs:
           name: meteor-client
           path: build/libs/*.jar
           if-no-files-found: error
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: meteor-client
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            **Commit:** ${{ github.sha }}
+            **Branch:** ${{ github.ref_name }}
+          files: build/libs/*.jar
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
