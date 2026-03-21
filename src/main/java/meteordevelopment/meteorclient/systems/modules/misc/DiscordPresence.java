@@ -39,6 +39,8 @@ import org.meteordev.starscript.Script;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DiscordPresence extends Module {
     public enum SelectMode {
@@ -81,7 +83,7 @@ public class DiscordPresence extends Module {
     private final Setting<List<String>> line2Strings = sgLine2.add(new StringListSetting.Builder()
         .name("line-2-messages")
         .description("Messages used for the second line.")
-        .defaultValue("Meteor on Crack!", "{round(server.tps, 1)} TPS", "Playing on {server.difficulty} difficulty.", "{server.player_count} Players online")
+        .defaultValue("Meteor Client", "{round(server.tps, 1)} TPS", "Playing on {server.difficulty} difficulty.", "{server.player_count} Players online")
         .onChanged(strings -> recompileLine2())
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
@@ -115,6 +117,32 @@ public class DiscordPresence extends Module {
     private int line2Ticks, line2I;
 
     public static final List<Pair<String, String>> customStates = new ArrayList<>();
+
+    
+    private static final Map<Class<?>, String> SCREEN_STATES = Util.make(new HashMap<>(), map -> {
+    map.put(TitleScreen.class,                "Looking at title screen");
+    map.put(SelectWorldScreen.class,          "Selecting world");
+    map.put(CreateWorldScreen.class,          "Creating world");
+    map.put(EditGameRulesScreen.class,        "Creating world");
+    map.put(EditWorldScreen.class,            "Editing world");
+    map.put(LevelLoadingScreen.class,         "Loading world");
+    map.put(MultiplayerScreen.class,          "Selecting server");
+    map.put(AddServerScreen.class,            "Adding server");
+    map.put(ConnectScreen.class,              "Connecting to server");
+    map.put(DirectConnectScreen.class,        "Connecting to server");
+    map.put(WidgetScreen.class,               "Browsing Meteor's GUI");
+    map.put(OptionsScreen.class,              "Changing options");
+    map.put(SkinOptionsScreen.class,          "Changing options");
+    map.put(SoundOptionsScreen.class,         "Changing options");
+    map.put(VideoOptionsScreen.class,         "Changing options");
+    map.put(ControlsOptionsScreen.class,      "Changing options");
+    map.put(LanguageOptionsScreen.class,      "Changing options");
+    map.put(ChatOptionsScreen.class,          "Changing options");
+    map.put(PackScreen.class,                 "Changing options");
+    map.put(AccessibilityOptionsScreen.class, "Changing options");
+    map.put(CreditsScreen.class,              "Reading credits");
+    map.put(RealmsScreen.class,               "Browsing Realms");
+    });
 
     static {
         registerCustomState("com.terraformersmc.modmenu.gui", "Browsing mods");
@@ -243,35 +271,11 @@ public class DiscordPresence extends Module {
         }
         else {
             if (!lastWasInMainMenu) {
-                rpc.setDetails(MeteorClient.NAME + " " + (MeteorClient.BUILD_NUMBER.isEmpty() ? MeteorClient.VERSION : MeteorClient.VERSION + " " + MeteorClient.BUILD_NUMBER));
+                rpc.setDetails(MeteorClient.NAME + " " + (MeteorClient.BUILD_NUMBER.isEmpty()
+                    ? MeteorClient.VERSION
+                    : MeteorClient.VERSION + " " + MeteorClient.BUILD_NUMBER));
 
-                if (mc.currentScreen instanceof TitleScreen) rpc.setState("Looking at title screen");
-                else if (mc.currentScreen instanceof SelectWorldScreen) rpc.setState("Selecting world");
-                else if (mc.currentScreen instanceof CreateWorldScreen || mc.currentScreen instanceof EditGameRulesScreen) rpc.setState("Creating world");
-                else if (mc.currentScreen instanceof EditWorldScreen) rpc.setState("Editing world");
-                else if (mc.currentScreen instanceof LevelLoadingScreen) rpc.setState("Loading world");
-                else if (mc.currentScreen instanceof MultiplayerScreen) rpc.setState("Selecting server");
-                else if (mc.currentScreen instanceof AddServerScreen) rpc.setState("Adding server");
-                else if (mc.currentScreen instanceof ConnectScreen || mc.currentScreen instanceof DirectConnectScreen) rpc.setState("Connecting to server");
-                else if (mc.currentScreen instanceof WidgetScreen) rpc.setState("Browsing Meteor's GUI");
-                else if (mc.currentScreen instanceof OptionsScreen || mc.currentScreen instanceof SkinOptionsScreen || mc.currentScreen instanceof SoundOptionsScreen || mc.currentScreen instanceof VideoOptionsScreen || mc.currentScreen instanceof ControlsOptionsScreen || mc.currentScreen instanceof LanguageOptionsScreen || mc.currentScreen instanceof ChatOptionsScreen || mc.currentScreen instanceof PackScreen || mc.currentScreen instanceof AccessibilityOptionsScreen) rpc.setState("Changing options");
-                else if (mc.currentScreen instanceof CreditsScreen) rpc.setState("Reading credits");
-                else if (mc.currentScreen instanceof RealmsScreen) rpc.setState("Browsing Realms");
-                else {
-                    boolean setState = false;
-                    if (mc.currentScreen != null) {
-                        String className = mc.currentScreen.getClass().getName();
-                        for (var pair : customStates) {
-                            if (className.startsWith(pair.getLeft())) {
-                                rpc.setState(pair.getRight());
-                                setState = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!setState) rpc.setState("In main menu");
-                }
-
+                rpc.setState(getScreenState());
                 update = true;
             }
         }
@@ -295,8 +299,24 @@ public class DiscordPresence extends Module {
         return help;
     }
 
+    private String getScreenState() {
+        if (mc.currentScreen == null) return "In main menu";
+
+        // Exact class match
+        String state = SCREEN_STATES.get(mc.currentScreen.getClass());
+        if (state != null) return state;
+
+        // Prefix-based fallback (customStates + mod compat)
+        String className = mc.currentScreen.getClass().getName();
+        for (var pair : customStates) {
+            if (className.startsWith(pair.getLeft())) return pair.getRight();
+        }
+
+        return "In main menu";
+    }
+
     private enum SmallImage {
-        MineGame("minegame", "MineGame159"),
+        MineGame("minegame", "MineGame159"),   // orignal creators of meteor
         Snail("seasnail", "seasnail8169");
 
         private final String key, text;

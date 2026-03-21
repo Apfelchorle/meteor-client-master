@@ -4,10 +4,7 @@
   "id": "meteor-client",
   "version": "${version}",
   "description": "Based utility mod.",
-  "authors": [
-    "The Meteor Development Team",
-    "usfl"
-  ],
+  "authors": [],
   "contact": {
     "homepage": "https://meteorclient.com",
     "issues": "https://github.com/MeteorDevelopment/meteor-client/issues",
@@ -18,9 +15,7 @@
   "icon": "assets/meteor-client/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": [
-      "meteordevelopment.meteorclient.MeteorClient"
-    ],
+    "client": ["meteordevelopment.meteorclient.MeteorClient"],
     "modmenu": [
       "meteordevelopment.meteorclient.modintegration.ModMenuIntegration"
     ]
