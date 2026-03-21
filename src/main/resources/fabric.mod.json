@@ -9,6 +9,7 @@
     "homepage": "https://meteorclient.com",
     "issues": "https://github.com/MeteorDevelopment/meteor-client/issues",
     "sources": "https://github.com/MeteorDevelopment/meteor-client",
+    "fork": "https://github.com/Apfelchorle/meteor-client-master",
     "discord": "https://meteorclient.com/discord"
   },
   "license": "GPL-3.0",

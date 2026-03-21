@@ -5,6 +5,10 @@
 
 package meteordevelopment.meteorclient.systems.modules.misc;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 //Created by squidoodly
 
 import meteordevelopment.discordipc.DiscordIPC;
@@ -37,15 +41,11 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
 import org.meteordev.starscript.Script;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-
 public class DiscordPresence extends Module {
+
     public enum SelectMode {
         Random,
-        Sequential
+        Sequential,
     }
 
     private final SettingGroup sgLine1 = settings.createGroup("Line 1");
@@ -53,56 +53,67 @@ public class DiscordPresence extends Module {
 
     // Line 1
 
-    private final Setting<List<String>> line1Strings = sgLine1.add(new StringListSetting.Builder()
-        .name("line-1-messages")
-        .description("Messages used for the first line.")
-        .defaultValue("{player}", "{server}")
-        .onChanged(strings -> recompileLine1())
-        .renderer(StarscriptTextBoxRenderer.class)
-        .build()
+    private final Setting<List<String>> line1Strings = sgLine1.add(
+        new StringListSetting.Builder()
+            .name("line-1-messages")
+            .description("Messages used for the first line.")
+            .defaultValue("{player}", "{server}")
+            .onChanged(strings -> recompileLine1())
+            .renderer(StarscriptTextBoxRenderer.class)
+            .build()
     );
 
-    private final Setting<Integer> line1UpdateDelay = sgLine1.add(new IntSetting.Builder()
-        .name("line-1-update-delay")
-        .description("How fast to update the first line in ticks.")
-        .defaultValue(200)
-        .min(10)
-        .sliderRange(10, 200)
-        .build()
+    private final Setting<Integer> line1UpdateDelay = sgLine1.add(
+        new IntSetting.Builder()
+            .name("line-1-update-delay")
+            .description("How fast to update the first line in ticks.")
+            .defaultValue(200)
+            .min(10)
+            .sliderRange(10, 200)
+            .build()
     );
 
-    private final Setting<SelectMode> line1SelectMode = sgLine1.add(new EnumSetting.Builder<SelectMode>()
-        .name("line-1-select-mode")
-        .description("How to select messages for the first line.")
-        .defaultValue(SelectMode.Sequential)
-        .build()
+    private final Setting<SelectMode> line1SelectMode = sgLine1.add(
+        new EnumSetting.Builder<SelectMode>()
+            .name("line-1-select-mode")
+            .description("How to select messages for the first line.")
+            .defaultValue(SelectMode.Sequential)
+            .build()
     );
 
     // Line 2
 
-    private final Setting<List<String>> line2Strings = sgLine2.add(new StringListSetting.Builder()
-        .name("line-2-messages")
-        .description("Messages used for the second line.")
-        .defaultValue("Meteor Client", "{round(server.tps, 1)} TPS", "Playing on {server.difficulty} difficulty.", "{server.player_count} Players online")
-        .onChanged(strings -> recompileLine2())
-        .renderer(StarscriptTextBoxRenderer.class)
-        .build()
+    private final Setting<List<String>> line2Strings = sgLine2.add(
+        new StringListSetting.Builder()
+            .name("line-2-messages")
+            .description("Messages used for the second line.")
+            .defaultValue(
+                "Meteor Client",
+                "{round(server.tps, 1)} TPS",
+                "Playing on {server.difficulty} difficulty.",
+                "{server.player_count} Players online"
+            )
+            .onChanged(strings -> recompileLine2())
+            .renderer(StarscriptTextBoxRenderer.class)
+            .build()
     );
 
-    private final Setting<Integer> line2UpdateDelay = sgLine2.add(new IntSetting.Builder()
-        .name("line-2-update-delay")
-        .description("How fast to update the second line in ticks.")
-        .defaultValue(60)
-        .min(10)
-        .sliderRange(10, 200)
-        .build()
+    private final Setting<Integer> line2UpdateDelay = sgLine2.add(
+        new IntSetting.Builder()
+            .name("line-2-update-delay")
+            .description("How fast to update the second line in ticks.")
+            .defaultValue(60)
+            .min(10)
+            .sliderRange(10, 200)
+            .build()
     );
 
-    private final Setting<SelectMode> line2SelectMode = sgLine2.add(new EnumSetting.Builder<SelectMode>()
-        .name("line-2-select-mode")
-        .description("How to select messages for the second line.")
-        .defaultValue(SelectMode.Sequential)
-        .build()
+    private final Setting<SelectMode> line2SelectMode = sgLine2.add(
+        new EnumSetting.Builder<SelectMode>()
+            .name("line-2-select-mode")
+            .description("How to select messages for the second line.")
+            .defaultValue(SelectMode.Sequential)
+            .build()
     );
 
     private static final RichPresence rpc = new RichPresence();
@@ -116,42 +127,57 @@ public class DiscordPresence extends Module {
     private final List<Script> line2Scripts = new ArrayList<>();
     private int line2Ticks, line2I;
 
-    public static final List<Pair<String, String>> customStates = new ArrayList<>();
+    public static final List<Pair<String, String>> customStates =
+        new ArrayList<>();
 
-    
-    private static final Map<Class<?>, String> SCREEN_STATES = Util.make(new HashMap<>(), map -> {
-    map.put(TitleScreen.class,                "Looking at title screen");
-    map.put(SelectWorldScreen.class,          "Selecting world");
-    map.put(CreateWorldScreen.class,          "Creating world");
-    map.put(EditGameRulesScreen.class,        "Creating world");
-    map.put(EditWorldScreen.class,            "Editing world");
-    map.put(LevelLoadingScreen.class,         "Loading world");
-    map.put(MultiplayerScreen.class,          "Selecting server");
-    map.put(AddServerScreen.class,            "Adding server");
-    map.put(ConnectScreen.class,              "Connecting to server");
-    map.put(DirectConnectScreen.class,        "Connecting to server");
-    map.put(WidgetScreen.class,               "Browsing Meteor's GUI");
-    map.put(OptionsScreen.class,              "Changing options");
-    map.put(SkinOptionsScreen.class,          "Changing options");
-    map.put(SoundOptionsScreen.class,         "Changing options");
-    map.put(VideoOptionsScreen.class,         "Changing options");
-    map.put(ControlsOptionsScreen.class,      "Changing options");
-    map.put(LanguageOptionsScreen.class,      "Changing options");
-    map.put(ChatOptionsScreen.class,          "Changing options");
-    map.put(PackScreen.class,                 "Changing options");
-    map.put(AccessibilityOptionsScreen.class, "Changing options");
-    map.put(CreditsScreen.class,              "Reading credits");
-    map.put(RealmsScreen.class,               "Browsing Realms");
-    });
+    private static final Map<Class<?>, String> SCREEN_STATES = Util.make(
+        new HashMap<>(),
+        map -> {
+            map.put(TitleScreen.class, "Looking at title screen");
+            map.put(SelectWorldScreen.class, "Selecting world");
+            map.put(CreateWorldScreen.class, "Creating world: Creating World");
+            map.put(
+                EditGameRulesScreen.class,
+                "Creating world: Editing Game Rules"
+            );
+            map.put(EditWorldScreen.class, "Editing world");
+            map.put(LevelLoadingScreen.class, "Loading world");
+            map.put(MultiplayerScreen.class, "Selecting server");
+            map.put(AddServerScreen.class, "Adding server");
+            map.put(ConnectScreen.class, "Connecting to server");
+            map.put(DirectConnectScreen.class, "Connecting to server");
+            map.put(WidgetScreen.class, "Browsing Meteor's GUI");
+            map.put(OptionsScreen.class, "Changing options");
+            map.put(SkinOptionsScreen.class, "Changing options: Skin");
+            map.put(SoundOptionsScreen.class, "Changing options: Sound");
+            map.put(VideoOptionsScreen.class, "Changing options: Video");
+            map.put(ControlsOptionsScreen.class, "Changing options: Controls");
+            map.put(LanguageOptionsScreen.class, "Changing options: Language");
+            map.put(ChatOptionsScreen.class, "Changing options: Chat");
+            map.put(PackScreen.class, "Changing options: Pack");
+            map.put(
+                AccessibilityOptionsScreen.class,
+                "Changing options: Accessibility"
+            );
+            map.put(CreditsScreen.class, "Reading credits");
+            map.put(RealmsScreen.class, "Browsing Realms");
+        }
+    );
 
     static {
         registerCustomState("com.terraformersmc.modmenu.gui", "Browsing mods");
-        registerCustomState("me.jellysquid.mods.sodium.client", "Changing options");
+        registerCustomState(
+            "me.jellysquid.mods.sodium.client",
+            "Changing options"
+        );
     }
 
     public DiscordPresence() {
-        super(Categories.Misc, "discord-presence", "Displays Meteor as your presence on Discord.");
-
+        super(
+            Categories.Misc,
+            "discord-presence",
+            "Displays Meteor as your presence on Discord."
+        );
         runInMainMenu = true;
     }
 
@@ -178,8 +204,12 @@ public class DiscordPresence extends Module {
 
         rpc.setStart(System.currentTimeMillis() / 1000L);
 
-        String largeText = "%s %s".formatted(MeteorClient.NAME, MeteorClient.VERSION);
-        if (!MeteorClient.BUILD_NUMBER.isEmpty()) largeText += " Build: " + MeteorClient.BUILD_NUMBER;
+        String largeText = "%s %s".formatted(
+            MeteorClient.NAME,
+            MeteorClient.VERSION
+        );
+        if (!MeteorClient.BUILD_NUMBER.isEmpty()) largeText +=
+            " Build: " + MeteorClient.BUILD_NUMBER;
         rpc.setLargeImage("meteor_client", largeText);
 
         currentSmallImage = SmallImage.Snail;
@@ -231,8 +261,7 @@ public class DiscordPresence extends Module {
             update = true;
 
             ticks = 0;
-        }
-        else ticks++;
+        } else ticks++;
 
         if (Utils.canUpdate()) {
             // Line 1
@@ -268,12 +297,17 @@ public class DiscordPresence extends Module {
 
                 line2Ticks = 0;
             } else line2Ticks++;
-        }
-        else {
+        } else {
             if (!lastWasInMainMenu) {
-                rpc.setDetails(MeteorClient.NAME + " " + (MeteorClient.BUILD_NUMBER.isEmpty()
-                    ? MeteorClient.VERSION
-                    : MeteorClient.VERSION + " " + MeteorClient.BUILD_NUMBER));
+                rpc.setDetails(
+                    MeteorClient.NAME +
+                        " " +
+                        (MeteorClient.BUILD_NUMBER.isEmpty()
+                            ? MeteorClient.VERSION
+                            : MeteorClient.VERSION +
+                              " " +
+                              MeteorClient.BUILD_NUMBER)
+                );
 
                 rpc.setState(getScreenState());
                 update = true;
@@ -294,7 +328,10 @@ public class DiscordPresence extends Module {
     @Override
     public WWidget getWidget(GuiTheme theme) {
         WButton help = theme.button("Open documentation.");
-        help.action = () -> Util.getOperatingSystem().open("https://github.com/MeteorDevelopment/meteor-client/wiki/Starscript");
+        help.action = () ->
+            Util.getOperatingSystem().open(
+                "https://github.com/MeteorDevelopment/meteor-client/wiki/Starscript"
+            );
 
         return help;
     }
@@ -316,7 +353,7 @@ public class DiscordPresence extends Module {
     }
 
     private enum SmallImage {
-        MineGame("minegame", "MineGame159"),   // orignal creators of meteor
+        MineGame("minegame", "MineGame159"), // orignal creators of meteor
         Snail("seasnail", "seasnail8169");
 
         private final String key, text;
